@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Consumption Prediction - PowerPlay</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body style="background: linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #2ecc71 100%); min-height: 100vh;">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-lg border-0" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">
+                            <i class="fas fa-bolt text-warning"></i> Electricity Consumption Prediction
+                        </h2>
+                        
+                        {% if error %}
+                        <div class="alert alert-danger">
+                            <strong>Error:</strong> {{ error }}
+                        </div>
+                        {% endif %}
+
+                        {% if results %}
+                        <div class="alert alert-success text-center">
+                            <h3><i class="fas fa-chart-line"></i> Prediction Result</h3>
+                            <div class="display-4 fw-bold text-success">{{ results }} kWh</div>
+                            <p>Predicted Electricity Consumption</p>
+                            {% if cost %}
+                            <div class="mt-3">
+                                <h5><i class="fas fa-dollar-sign"></i> Estimated Cost: ${{ cost }}</h5>
+                                <small>Based on average rate of $0.12 per kWh</small>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <form method="POST" action="/predictdata" id="predictionForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="timestamp" class="form-label">Timestamp</label>
+                                        <input type="datetime-local" class="form-control" id="timestamp" name="timestamp" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="day_of_week" class="form-label">Day of Week</label>
+                                        <select class="form-select" id="day_of_week" name="day_of_week" required>
+                                            <option value="">Select Day</option>
+                                            <option value="0">Monday</option>
+                                            <option value="1">Tuesday</option>
+                                            <option value="2">Wednesday</option>
+                                            <option value="3">Thursday</option>
+                                            <option value="4">Friday</option>
+                                            <option value="5">Saturday</option>
+                                            <option value="6">Sunday</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="hour_of_day" class="form-label">Hour of Day</label>
+                                        <input type="number" class="form-control" id="hour_of_day" name="hour_of_day" 
+                                               min="0" max="23" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="month" class="form-label">Month</label>
+                                        <input type="number" class="form-control" id="month" name="month" 
+                                               min="1" max="12" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="season" class="form-label">Season</label>
+                                        <select class="form-select" id="season" name="season" required>
+                                            <option value="">Select Season</option>
+                                            <option value="Winter1">Winter</option>
+                                            <option value="Spring">Spring</option>
+                                            <option value="Summer">Summer</option>
+                                            <option value="Fall">Fall</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="temperature" class="form-label">Temperature (°C)</label>
+                                        <input type="number" class="form-control" id="temperature" name="temperature" 
+                                               step="0.1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="solar_generation" class="form-label">Solar Generation (kWh)</label>
+                                        <input type="number" class="form-control" id="solar_generation" name="solar_generation" 
+                                               step="0.1" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="is_weekend" class="form-label">Weekend</label>
+                                        <select class="form-select" id="is_weekend" name="is_weekend" required>
+                                            <option value="">Select</option>
+                                            <option value="0">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="is_holiday" class="form-label">Holiday</label>
+                                        <select class="form-select" id="is_holiday" name="is_holiday" required>
+                                            <option value="">Select</option>
+                                            <option value="0">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="is_national_holiday" class="form-label">National Holiday</label>
+                                        <select class="form-select" id="is_national_holiday" name="is_national_holiday" required>
+                                            <option value="">Select</option>
+                                            <option value="0">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="is_diwali_season" class="form-label">Diwali Season</label>
+                                        <select class="form-select" id="is_diwali_season" name="is_diwali_season" required>
+                                            <option value="">Select</option>
+                                            <option value="0">No</option>
+                                            <option value="1">Yes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lag_1h" class="form-label">Lag 1 Hour (kWh)</label>
+                                        <input type="number" class="form-control" id="lag_1h" name="lag_1h" 
+                                               step="0.1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="lag_24h" class="form-label">Lag 24 Hours (kWh)</label>
+                                        <input type="number" class="form-control" id="lag_24h" name="lag_24h" 
+                                               step="0.1" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="rolling_mean_3h" class="form-label">Rolling Mean 3H (kWh)</label>
+                                        <input type="number" class="form-control" id="rolling_mean_3h" name="rolling_mean_3h" 
+                                               step="0.1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="rolling_mean_24h" class="form-label">Rolling Mean 24H (kWh)</label>
+                                        <input type="number" class="form-control" id="rolling_mean_24h" name="rolling_mean_24h" 
+                                               step="0.1" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-danger btn-lg px-5 py-3">
+                                    <i class="fas fa-bolt"></i> Predict Electricity Consumption
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <a href="/" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const timestamp = now.toISOString().slice(0, 16);
+            document.getElementById('timestamp').value = timestamp;
+            
+            document.getElementById('timestamp').addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const dayOfWeek = selectedDate.getDay();
+                const month = selectedDate.getMonth() + 1;
+                
+                document.getElementById('day_of_week').value = dayOfWeek;
+                document.getElementById('month').value = month;
+                
+                let season = '';
+                if (month >= 3 && month <= 5) season = 'Spring';
+                else if (month >= 6 && month <= 8) season = 'Summer';
+                else if (month >= 9 && month <= 11) season = 'Fall';
+                else season = 'Winter1';
+                document.getElementById('season').value = season;
+                
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6) ? 1 : 0;
+                document.getElementById('is_weekend').value = isWeekend;
+            });
+        });
+    </script>
+</body>
+</html>
